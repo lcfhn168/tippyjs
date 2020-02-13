@@ -157,12 +157,13 @@ export default function createTippy(
     }
   });
 
-  popper.addEventListener('mouseleave', () => {
+  popper.addEventListener('mouseleave', event => {
     if (
       instance.props.interactive &&
       instance.props.trigger.indexOf('mouseenter') >= 0
     ) {
       doc.addEventListener('mousemove', debouncedOnMouseMove);
+      debouncedOnMouseMove(event);
     }
   });
 
@@ -492,7 +493,7 @@ export default function createTippy(
       (el: Element) => el === reference || el === popper,
     );
 
-    if (isCursorOverReferenceOrPopper) {
+    if (event.type === 'mousemove' && isCursorOverReferenceOrPopper) {
       return;
     }
 
@@ -501,11 +502,11 @@ export default function createTippy(
       .map(popper => {
         const instance = popper._tippy!;
 
-        if (instance.popperInstance) {
+        if (instance.popperInstance && instance.state.currentPlacement) {
           return {
             popperRect: popper.getBoundingClientRect(),
-            basePlacement: getBasePlacement(instance.state.currentPlacement!),
-            offsetData: instance.popperInstance!.state.modifiersData.offset,
+            basePlacement: getBasePlacement(instance.state.currentPlacement),
+            offsetData: instance.popperInstance.state.modifiersData.offset,
             props,
           };
         }
@@ -533,6 +534,7 @@ export default function createTippy(
       doc.body.addEventListener('mouseleave', scheduleHide);
       doc.addEventListener('mousemove', debouncedOnMouseMove);
       pushIfUnique(mouseMoveListeners, debouncedOnMouseMove);
+      debouncedOnMouseMove(event);
 
       return;
     }
